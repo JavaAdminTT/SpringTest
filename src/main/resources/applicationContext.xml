@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+
+	<context:property-placeholder location="classpath:dbconfig.properties" />
+		
+	
+	
+	<bean id="comboPooledDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="user" value="${jdbc.username}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+		<property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+		<property name="driverClass" value="${jdbc.driverClass}"></property>
+	</bean>
+	
+	
+	
+	
+	
+
+	
+
+	<!-- 通过继承实现代码复用 -->
+	<!-- depends-on="book"用来实现类之间的依赖关系，如下所示，person08的创建需要依赖book对象存在的条件 -->
+	<!-- scope="singleton" or "prototype"用该属性控制实例是否为单例。
+	   若不是单例不在加载容器的时候创建对象，获取几次创建几次。
+	   request , session 代表同一次请求或会话创建一个对象 -->
+	   <!-- 单实例情况下初始化方法在容器启动时调用，销毁方法在容器关闭是被调用
+	           多实例时调用person08才会执行初始化，但销毁spring无法控制（原因：框架底层不保存多实例对象） -->
+	<bean id="person08" class="com.seyong.beans.Person" parent="person04" 
+	           depends-on="book" scope="singleton"  init-method="init" destroy-method="destroy">
+		<property name="name" value="Lisen"></property>
+	</bean>
+
+	<!-- 通过级联属性赋值 -->
+	<!-- abstract="true"属性指定该类不用创建，专门用来继承 -->
+	<bean id="person07" class="com.seyong.beans.Person" abstract="true">
+		<property name="name" value="Linux"></property>
+		
+		<property name="book">
+			<bean class="com.seyong.beans.Book">
+				<property name="bookName" value="Java"></property>
+			</bean>
+		</property>
+		
+		<!-- 为级联属性赋值时必须先创建级联属性对应的对象或者是引用[ref] （必须现有可用的级联属性对象才可以） -->
+		<property name="book.price" value="190"></property>
+	</bean>
+
+
+
+	<!-- 学会使用名称空间定义集合方便重复使用 -->
+	<util:map id="map01">
+		<entry key="json" value-ref="book"></entry>
+					<entry key="java" value-ref="person03"></entry>
+					<entry key="mylist">
+						<list>
+							<ref bean="person01"/>
+							<ref bean="person03"/>
+							<value>json</value>
+						</list>
+					</entry>
+	</util:map>
+	
+	<util:list id="list01">
+
+			<ref bean="person01"/>
+				<ref bean="person03"/>
+				<value>json</value>
+	
+	</util:list>
+
+	<!-- 为集合赋值 -->
+	<bean id="person06" class="com.seyong.beans.Person">
+		<property name="list">
+			<ref bean="list01"/>
+		</property>
+		
+		<property name="map" ref="map01">
+			
+		</property>
+	</bean>
+
+	<!-- 引用内部bean -->
+	<bean id="person05" class="com.seyong.beans.Person">
+		<property name="book"> 
+			<bean id="book" class="com.seyong.beans.Book" p:price="180" p:author="Admin">
+				<property name="bookName" value="Java"></property>
+			</bean>
+		</property>
+	</bean>
+	
+	<!-- 引用其他的bean -->
+	<bean id="person04" class="com.seyong.beans.Person" p:age="18"  p:gender="woman" p:name="lili" p:book-ref="book"></bean>
+	<bean id="book" class="com.seyong.beans.Book">
+		<property name="author" value="jaasm"></property>
+		<property name="bookName" ><null></null></property>
+		<property name="price" value="180"></property>
+	</bean>
+	
+	<!-- 通过名称空间赋值 -->
+	<bean id="person03" class="com.seyong.beans.Person" p:age="15" p:gender="man" p:name="tomcat"></bean>
+	
+	<!-- 通过IOC容器创建对象，并未属性赋值 -->
+	<bean id="person01" class="com.seyong.beans.Person">
+		<property name="name" value="张三"></property>
+		<property name="gender" value="man"></property>
+		<property name="age" value="18"></property>
+	</bean>
+	
+	
+	<bean id="person02" class="com.seyong.beans.Person">
+		<!-- 通过构造函数赋值 -->
+		<constructor-arg name="name" value="张三"></constructor-arg>
+		<constructor-arg name="gender" value="man"></constructor-arg>
+		<!-- 通过type设置类型防止重载构造器带来的错误，如果包装类型需要写包装类型（例：Integer） -->
+		<constructor-arg name="age" value="19" type="int"></constructor-arg>
+	</bean>
+
+</beans>
